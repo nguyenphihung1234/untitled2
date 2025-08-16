@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/order.dart';
 
@@ -9,12 +10,18 @@ class OrderService {
   // Read orders from JSON file
   static Future<List<Order>> readOrdersFromFile() async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/$_fileName');
-      if (await file.exists()) {
-        final jsonString = await file.readAsString();
-        final List<dynamic> jsonList = json.decode(jsonString);
-        return jsonList.map((json) => Order.fromJson(json)).toList();
+      if (kIsWeb) {
+        // For web, we'll use localStorage or just return empty list
+        // In a real web app, you'd use localStorage or IndexedDB
+        return [];
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/$_fileName');
+        if (await file.exists()) {
+          final jsonString = await file.readAsString();
+          final List<dynamic> jsonList = json.decode(jsonString);
+          return jsonList.map((json) => Order.fromJson(json)).toList();
+        }
       }
     } catch (e) {
       print('Error reading orders from file: $e');
@@ -25,10 +32,16 @@ class OrderService {
   // Write orders to JSON file
   static Future<void> writeOrdersToFile(List<Order> orders) async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/$_fileName');
-      final jsonString = json.encode(orders.map((order) => order.toJson()).toList());
-      await file.writeAsString(jsonString);
+      if (kIsWeb) {
+        // For web, we'll just print to console
+        // In a real web app, you'd use localStorage or IndexedDB
+        print('Orders to save: ${json.encode(orders.map((order) => order.toJson()).toList())}');
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/$_fileName');
+        final jsonString = json.encode(orders.map((order) => order.toJson()).toList());
+        await file.writeAsString(jsonString);
+      }
     } catch (e) {
       print('Error writing orders to file: $e');
     }
